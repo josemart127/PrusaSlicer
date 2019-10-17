@@ -25,7 +25,7 @@ ExternalProject_Add(dep_boost
     URL_HASH SHA256=bd0df411efd9a585e5a2212275f8762079fed8842264954675a4fddc46cfcf60
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ./bootstrap.sh
-        --with-libraries=system,filesystem,thread,log,locale,regex
+        --with-libraries=system,iostreams,filesystem,thread,log,locale,regex
         "--prefix=${DESTDIR}/usr/local"
     BUILD_COMMAND ./b2
         -j ${NPROC}
