@@ -114,3 +114,5 @@ ExternalProject_Add(dep_wxwidgets
     BUILD_COMMAND make "-j${NPROC}" && PATH=/usr/local/opt/gettext/bin/:$ENV{PATH} make -C locale allmo
     INSTALL_COMMAND make install
 )
+
+add_dependencies(dep_openvdb dep_boost)

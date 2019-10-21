@@ -96,6 +96,9 @@ if (MSVC)
         dep_nlopt
         # dep_qhull # Experimental
         dep_zlib    # on Windows we still need zlib
+        dep_blosc
+        dep_openexr
+        dep_openvdb
     )
 
 else()
@@ -110,6 +113,9 @@ else()
         dep_cereal
         dep_nlopt
         dep_qhull
+        dep_blosc
+        dep_openexr
+        dep_openvdb
         # dep_libigl # Not working, static build has different Eigen
     )
 
