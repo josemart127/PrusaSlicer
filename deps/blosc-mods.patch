@@ -1,52 +1,23 @@
-From 8c6bd228f63c98e4d1ea7de938add1ca5226256e Mon Sep 17 00:00:00 2001
-From: Julien Schueller <schueller@phimeca.com>
-Date: Sun, 28 Jul 2019 08:33:02 +0200
-Subject: [PATCH 1/2] Install .dll in prefix/bin
-
----
- blosc/CMakeLists.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/blosc/CMakeLists.txt b/blosc/CMakeLists.txt
-index 1d1bebe..c25c3f0 100644
---- a/blosc/CMakeLists.txt
-+++ b/blosc/CMakeLists.txt
-@@ -215,9 +215,9 @@ endif(BUILD_STATIC)
- if(BLOSC_INSTALL)
-     install(FILES blosc.h blosc-export.h DESTINATION include COMPONENT DEV)
-     if(BUILD_SHARED)
--        install(TARGETS blosc_shared DESTINATION ${lib_dir} COMPONENT LIB)
-+        install(TARGETS blosc_shared LIBRARY DESTINATION ${lib_dir} ARCHIVE DESTINATION ${lib_dir} RUNTIME DESTINATION bin COMPONENT LIB)
-     endif(BUILD_SHARED)
-     if(BUILD_STATIC)
--        install(TARGETS blosc_static DESTINATION ${lib_dir} COMPONENT DEV)
-+        install(TARGETS blosc_static LIBRARY DESTINATION ${lib_dir} ARCHIVE DESTINATION ${lib_dir} RUNTIME DESTINATION bin COMPONENT DEV)
-     endif(BUILD_STATIC)
- endif(BLOSC_INSTALL)
--- 
-2.17.1
-
-
-From 966f1c36c85bf344b3d84b2e0b9147ec01b165fd Mon Sep 17 00:00:00 2001
+From 24640a466b28dfda26069096554676e8c0b6d090 Mon Sep 17 00:00:00 2001
 From: tamasmeszaros <meszaros.q@gmail.com>
-Date: Thu, 17 Oct 2019 12:26:53 +0200
-Subject: [PATCH 2/2] Add config export to cmake build for downstream
- find_package
+Date: Tue, 22 Oct 2019 11:29:05 +0200
+Subject: [PATCH] Install.dll in prefix/bin and add config export to cmake
+ build
 
 ---
- CMakeLists.txt                   | 112 +++++++++++++++-------------
- blosc/CMakeLists.txt             | 121 ++++++++-----------------------
+ CMakeLists.txt                   | 112 ++++++++++++++++++++----------------
+ blosc/CMakeLists.txt             | 121 ++++++++++-----------------------------
  cmake/FindLZ4.cmake              |   6 +-
- cmake/FindSnappy.cmake           |   8 +-
- cmake/FindZstd.cmake             |   8 +-
- cmake_config.cmake.in            |  33 +++++++++
- internal-complibs/CMakeLists.txt |  30 ++++++++
+ cmake/FindSnappy.cmake           |   8 ++-
+ cmake/FindZstd.cmake             |   8 ++-
+ cmake_config.cmake.in            |  33 +++++++++++
+ internal-complibs/CMakeLists.txt |  30 ++++++++++
  7 files changed, 173 insertions(+), 145 deletions(-)
  create mode 100644 cmake_config.cmake.in
  create mode 100644 internal-complibs/CMakeLists.txt
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 59d9fab..49086e1 100644
+index 59d9fab..bdc0dda 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -71,7 +71,7 @@
@@ -168,22 +139,22 @@ index 59d9fab..49086e1 100644
 +
 +    include(CMakePackageConfigHelpers)
 +    write_basic_package_version_file(
-+        "${CMAKE_CURRENT_BINARY_DIR}/cmakeexports/BloscConfigVersion.cmake"     
++        "${CMAKE_CURRENT_BINARY_DIR}/cmakeexports/BloscConfigVersion.cmake"
 +        VERSION ${BLOSC_VERSION_MAJOR}.${BLOSC_VERSION_MINOR}.${BLOSC_VERSION_PATCH}
 +        COMPATIBILITY AnyNewerVersion
 +    )
 +
-+    export(EXPORT BloscTargets 
-+       FILE "${CMAKE_CURRENT_BINARY_DIR}/cmakeexports/BloscTargets.cmake" 
++    export(EXPORT BloscTargets
++       FILE "${CMAKE_CURRENT_BINARY_DIR}/cmakeexports/BloscTargets.cmake"
 +       NAMESPACE Blosc::)
 +
-+    install(EXPORT BloscTargets 
++    install(EXPORT BloscTargets
 +            FILE BloscTargets.cmake
 +            NAMESPACE Blosc::
 +            DESTINATION lib/cmake/Blosc
 +            EXPORT_LINK_INTERFACE_LIBRARIES)
 +
-+    install(FILES 
++    install(FILES
 +                "${CMAKE_CURRENT_BINARY_DIR}/cmakeexports/BloscConfig.cmake"
 +                "${CMAKE_CURRENT_BINARY_DIR}/cmakeexports/BloscConfigVersion.cmake"
 +                "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindLZ4.cmake"
@@ -195,7 +166,7 @@ index 59d9fab..49086e1 100644
          COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
  endif()
 diff --git a/blosc/CMakeLists.txt b/blosc/CMakeLists.txt
-index c25c3f0..48fda33 100644
+index 1d1bebe..16aff02 100644
 --- a/blosc/CMakeLists.txt
 +++ b/blosc/CMakeLists.txt
 @@ -1,52 +1,11 @@
@@ -352,19 +323,19 @@ index c25c3f0..48fda33 100644
      install(FILES blosc.h blosc-export.h DESTINATION include COMPONENT DEV)
 +    set(_inst_libs "blosc")
      if(BUILD_SHARED)
--        install(TARGETS blosc_shared LIBRARY DESTINATION ${lib_dir} ARCHIVE DESTINATION ${lib_dir} RUNTIME DESTINATION bin COMPONENT LIB)
+-        install(TARGETS blosc_shared DESTINATION ${lib_dir} COMPONENT LIB)
 +        list(APPEND _inst_libs blosc_shared)
      endif(BUILD_SHARED)
      if(BUILD_STATIC)
--        install(TARGETS blosc_static LIBRARY DESTINATION ${lib_dir} ARCHIVE DESTINATION ${lib_dir} RUNTIME DESTINATION bin COMPONENT DEV)
+-        install(TARGETS blosc_static DESTINATION ${lib_dir} COMPONENT DEV)
 +        list(APPEND _inst_libs blosc_static)
      endif(BUILD_STATIC)
 +
-+    install(TARGETS ${_inst_libs} 
-+            EXPORT BloscTargets 
-+            LIBRARY DESTINATION ${lib_dir} 
-+            ARCHIVE DESTINATION ${lib_dir} 
-+            RUNTIME DESTINATION bin 
++    install(TARGETS ${_inst_libs}
++            EXPORT BloscTargets
++            LIBRARY DESTINATION ${lib_dir}
++            ARCHIVE DESTINATION ${lib_dir}
++            RUNTIME DESTINATION bin
 +            COMPONENT DEV
 +            INCLUDES DESTINATION include)
  endif(BLOSC_INSTALL)
@@ -406,7 +377,7 @@ index 688d4d5..21dbee1 100644
 +endif ()
 \ No newline at end of file
 diff --git a/cmake/FindZstd.cmake b/cmake/FindZstd.cmake
-index 7db4bb9..ab64007 100644
+index 7db4bb9..cabc2f8 100644
 --- a/cmake/FindZstd.cmake
 +++ b/cmake/FindZstd.cmake
 @@ -3,8 +3,12 @@ find_path(ZSTD_INCLUDE_DIR zstd.h)
@@ -416,7 +387,7 @@ index 7db4bb9..ab64007 100644
 -    set(ZSTD_FOUND TRUE)
 +    set(Zstd_FOUND TRUE)
 +    add_library(Zstd::Zstd UNKNOWN IMPORTED)
-+    set_target_properties(Zstd::Zstd PROPERTIES 
++    set_target_properties(Zstd::Zstd PROPERTIES
 +        IMPORTED_LOCATION ${ZSTD_LIBRARY}
 +        INTERFACE_INCLUDE_DIRECTORIES ${ZSTD_INCLUDE_DIR})
      message(STATUS "Found Zstd library: ${ZSTD_LIBRARY}")
@@ -427,7 +398,7 @@ index 7db4bb9..ab64007 100644
 \ No newline at end of file
 diff --git a/cmake_config.cmake.in b/cmake_config.cmake.in
 new file mode 100644
-index 0000000..4ac18f5
+index 0000000..b4ede30
 --- /dev/null
 +++ b/cmake_config.cmake.in
 @@ -0,0 +1,33 @@
@@ -451,7 +422,7 @@ index 0000000..4ac18f5
 +    if(NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/BloscTargets-${from_cfg}.cmake)
 +        foreach(tgt IN ITEMS blosc_static blosc_shared blosc)
 +            if(TARGET Blosc::${tgt})
-+                set_target_properties(Blosc::${tgt} PROPERTIES 
++                set_target_properties(Blosc::${tgt} PROPERTIES
 +                    MAP_IMPORTED_CONFIG_${from_CFG} ${to_Cfg})
 +            endif()
 +        endforeach()
@@ -502,5 +473,5 @@ index 0000000..5b23484
 +target_include_directories(Zstd INTERFACE $<BUILD_INTERFACE:${ZSTD_DIR}/common>)
 \ No newline at end of file
 -- 
-2.17.1
+2.16.2.windows.1
 
