@@ -24,23 +24,23 @@ index 1d1bebe..c25c3f0 100644
      endif(BUILD_STATIC)
  endif(BLOSC_INSTALL)
 -- 
-2.16.2.windows.1
+2.17.1
 
 
-From e92ddf2ebee1d8303abfdff5ba24f6476dc8c03b Mon Sep 17 00:00:00 2001
+From 966f1c36c85bf344b3d84b2e0b9147ec01b165fd Mon Sep 17 00:00:00 2001
 From: tamasmeszaros <meszaros.q@gmail.com>
 Date: Thu, 17 Oct 2019 12:26:53 +0200
 Subject: [PATCH 2/2] Add config export to cmake build for downstream
  find_package
 
 ---
- CMakeLists.txt                   | 112 ++++++++++++++++++++----------------
- blosc/CMakeLists.txt             | 121 ++++++++++-----------------------------
+ CMakeLists.txt                   | 112 +++++++++++++++-------------
+ blosc/CMakeLists.txt             | 121 ++++++++-----------------------
  cmake/FindLZ4.cmake              |   6 +-
- cmake/FindSnappy.cmake           |   8 ++-
- cmake/FindZstd.cmake             |   8 ++-
- cmake_config.cmake.in            |  33 +++++++++++
- internal-complibs/CMakeLists.txt |  30 ++++++++++
+ cmake/FindSnappy.cmake           |   8 +-
+ cmake/FindZstd.cmake             |   8 +-
+ cmake_config.cmake.in            |  33 +++++++++
+ internal-complibs/CMakeLists.txt |  30 ++++++++
  7 files changed, 173 insertions(+), 145 deletions(-)
  create mode 100644 cmake_config.cmake.in
  create mode 100644 internal-complibs/CMakeLists.txt
@@ -466,7 +466,7 @@ index 0000000..4ac18f5
 +endif()
 diff --git a/internal-complibs/CMakeLists.txt b/internal-complibs/CMakeLists.txt
 new file mode 100644
-index 0000000..ce877f8
+index 0000000..5b23484
 --- /dev/null
 +++ b/internal-complibs/CMakeLists.txt
 @@ -0,0 +1,30 @@
@@ -485,7 +485,7 @@ index 0000000..ce877f8
 +endmacro()
 +
 +set(ZLIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/zlib-1.2.8)
-+file(GLOB ZLIB_FILES ${ZLIB_DIR}*.c)
++file(GLOB ZLIB_FILES ${ZLIB_DIR}/*.c)
 +add_lib_target(ZLIB ZLIB ${ZLIB_DIR} "${ZLIB_FILES}")
 +
 +set(SNAPPY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/snappy-1.1.1)
@@ -502,5 +502,5 @@ index 0000000..ce877f8
 +target_include_directories(Zstd INTERFACE $<BUILD_INTERFACE:${ZSTD_DIR}/common>)
 \ No newline at end of file
 -- 
-2.16.2.windows.1
+2.17.1
 

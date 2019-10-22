@@ -99,6 +99,13 @@ endforeach ()
 # Add our own cmake module path.
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules/)
 
+# This is not ideal but this is how OpenVDB imagined it...
+if(SLIC3R_STATIC)    
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_PREFIX_PATH}/lib/cmake/OpenVDB)
+elseif(UNIX)
+    list(APPEND CMAKE_MODULE_PATH /usr/lib/cmake/OpenVDB)
+endif()
+
 enable_testing ()
 
 # Enable C++11 language standard.
@@ -376,6 +383,13 @@ add_custom_target(pot
 )
 
 find_package(NLopt 1.4 REQUIRED)
+
+if(SLIC3R_STATIC)
+    set(OPENVDB_USE_STATIC_LIBS ON)
+endif()
+
+find_package(OpenVDB 5.0 REQUIRED openvdb)
+find_package(Blosc 1.5 REQUIRED)
 
 # libslic3r, PrusaSlicer GUI and the PrusaSlicer executable.
 add_subdirectory(src)
