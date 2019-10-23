@@ -100,8 +100,9 @@ endforeach ()
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules/)
 
 # This is not ideal but this is how OpenVDB imagined it...
-if(SLIC3R_STATIC)    
-    list(APPEND CMAKE_MODULE_PATH ${CMAKE_PREFIX_PATH}/lib/cmake/OpenVDB)
+if(SLIC3R_STATIC)
+    file(TO_CMAKE_PATH ${CMAKE_PREFIX_PATH} _prefix_path)
+    list(APPEND CMAKE_MODULE_PATH ${_prefix_path}/lib/cmake/OpenVDB)
 elseif(UNIX)
     list(APPEND CMAKE_MODULE_PATH /usr/lib/cmake/OpenVDB)
 endif()
@@ -278,13 +279,10 @@ endif()
 
 function(slic3r_remap_configs targets from_Cfg to_Cfg)
     string(TOUPPER ${from_Cfg} from_CFG)
-    string(TOLOWER ${from_Cfg} from_cfg)
 
-    message(STATUS "remapping targets: ${targets}")
     foreach(tgt ${targets})
         if(TARGET ${tgt})
             set_target_properties(${tgt} PROPERTIES MAP_IMPORTED_CONFIG_${from_CFG} ${to_Cfg})
-            message(STATUS "remap ${tgt} from ${from_Cfg} to ${to_Cfg}")
         endif()
     endforeach()
 endfunction()
@@ -403,6 +401,7 @@ endif()
 
 find_package(OpenVDB 5.0 REQUIRED openvdb)
 find_package(Blosc 1.5 REQUIRED)
+slic3r_remap_configs(IlmBase::Half RelWithDebInfo Release)
 
 # libslic3r, PrusaSlicer GUI and the PrusaSlicer executable.
 add_subdirectory(src)

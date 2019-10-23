@@ -365,7 +365,7 @@ ExternalProject_Add(dep_openvdb
         -DTBB_STATIC=ON
         -DOPENVDB_BUILD_VDB_PRINT=ON
     BUILD_COMMAND msbuild /m /P:Configuration=Release INSTALL.vcxproj
-    PATCH_COMMAND ${GIT_EXECUTABLE} apply ${CMAKE_CURRENT_SOURCE_DIR}/openvdb-mods.patch
+    PATCH_COMMAND ${GIT_EXECUTABLE} apply --whitespace=fix ${CMAKE_CURRENT_SOURCE_DIR}/openvdb-mods.patch
     INSTALL_COMMAND ""
 )
 

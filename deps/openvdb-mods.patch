@@ -1,23 +1,23 @@
-From c176eb5b304aa42be3b65b857bdd01a802958d7a Mon Sep 17 00:00:00 2001
+From ee867b9f226412c0f3b83fa01cd43539acc4ed95 Mon Sep 17 00:00:00 2001
 From: tamasmeszaros <meszaros.q@gmail.com>
-Date: Mon, 21 Oct 2019 15:54:08 +0200
-Subject: [PATCH] patched openvdb v6.2.1
+Date: Wed, 16 Oct 2019 17:42:50 +0200
+Subject: [PATCH] Build fixes for PrusaSlicer integration
 
 ---
  CMakeLists.txt                  |   3 -
- cmake/FindBlosc.cmake           | 218 ------------
+ cmake/FindBlosc.cmake           | 218 ---------------
  cmake/FindCppUnit.cmake         |   4 +-
- cmake/FindIlmBase.cmake         | 337 ------------------
- cmake/FindOpenEXR.cmake         | 329 ------------------
- cmake/FindOpenVDB.cmake         |  26 +-
- cmake/FindTBB.cmake             | 593 ++++++++++++++++----------------
+ cmake/FindIlmBase.cmake         | 337 -----------------------
+ cmake/FindOpenEXR.cmake         | 329 ----------------------
+ cmake/FindOpenVDB.cmake         |  19 +-
+ cmake/FindTBB.cmake             | 593 ++++++++++++++++++++--------------------
  openvdb/CMakeLists.txt          |  13 +-
  openvdb/Grid.cc                 |   3 +
  openvdb/PlatformConfig.h        |   9 +-
  openvdb/cmd/CMakeLists.txt      |   4 +-
  openvdb/unittest/CMakeLists.txt |   3 +-
  openvdb/unittest/TestFile.cc    |   2 +-
- 13 files changed, 331 insertions(+), 1213 deletions(-)
+ 13 files changed, 325 insertions(+), 1212 deletions(-)
  delete mode 100644 cmake/FindBlosc.cmake
  delete mode 100644 cmake/FindIlmBase.cmake
  delete mode 100644 cmake/FindOpenEXR.cmake
@@ -964,7 +964,7 @@ index 339c1a2..0000000
 -  message(FATAL_ERROR "Unable to find OpenEXR")
 -endif()
 diff --git a/cmake/FindOpenVDB.cmake b/cmake/FindOpenVDB.cmake
-index 63a2eda..f6a04a8 100644
+index 63a2eda..6211071 100644
 --- a/cmake/FindOpenVDB.cmake
 +++ b/cmake/FindOpenVDB.cmake
 @@ -244,7 +244,7 @@ set(OpenVDB_LIB_COMPONENTS "")
@@ -976,41 +976,37 @@ index 63a2eda..f6a04a8 100644
      NO_DEFAULT_PATH
      PATHS ${_OPENVDB_LIBRARYDIR_SEARCH_DIRS}
      PATH_SUFFIXES ${OPENVDB_PATH_SUFFIXES}
-@@ -330,13 +330,15 @@ set(_EXCLUDE_SYSTEM_PREREQUISITES 1)
- set(_RECURSE_PREREQUISITES 0)
- set(_OPENVDB_PREREQUISITE_LIST)
+@@ -282,16 +282,13 @@ find_package_handle_standard_args(OpenVDB
+ # ------------------------------------------------------------------------
  
--get_prerequisites(${OpenVDB_openvdb_LIBRARY}
--  _OPENVDB_PREREQUISITE_LIST
--  ${_EXCLUDE_SYSTEM_PREREQUISITES}
--  ${_RECURSE_PREREQUISITES}
--  ""
--  "${SYSTEM_LIBRARY_PATHS}"
--)
-+if(NOT OPENVDB_USE_STATIC_LIBS)
-+  get_prerequisites(${OpenVDB_openvdb_LIBRARY}
-+    _OPENVDB_PREREQUISITE_LIST
-+    ${_EXCLUDE_SYSTEM_PREREQUISITES}
-+    ${_RECURSE_PREREQUISITES}
-+    ""
-+    "${SYSTEM_LIBRARY_PATHS}"
-+  )
-+endif()
+ # Set the ABI number the library was built against. Uses vdb_print
++find_program(OPENVDB_PRINT vdb_print
++  PATHS ${_OPENVDB_INSTALL}/bin ${OpenVDB_INCLUDE_DIR}
++  NO_DEFAULT_PATH)
  
- unset(_EXCLUDE_SYSTEM_PREREQUISITES)
- unset(_RECURSE_PREREQUISITES)
-@@ -471,7 +473,13 @@ foreach(COMPONENT ${OpenVDB_FIND_COMPONENTS})
-       IMPORTED_LINK_DEPENDENT_LIBRARIES "${_OPENVDB_HIDDEN_DEPENDENCIES}" # non visible deps
+ if(_OPENVDB_INSTALL)
+   OPENVDB_ABI_VERSION_FROM_PRINT(
+-    "${_OPENVDB_INSTALL}/bin/vdb_print"
+-    ABI OpenVDB_ABI
+-  )
+-else()
+-  # Try and find vdb_print from the include path
+-  OPENVDB_ABI_VERSION_FROM_PRINT(
+-    "${OpenVDB_INCLUDE_DIR}/../bin/vdb_print"
++    "${OPENVDB_PRINT}"
+     ABI OpenVDB_ABI
+   )
+ endif()
+@@ -472,6 +469,12 @@ foreach(COMPONENT ${OpenVDB_FIND_COMPONENTS})
        INTERFACE_LINK_LIBRARIES "${_OPENVDB_VISIBLE_DEPENDENCIES}" # visible deps (headers)
        INTERFACE_COMPILE_FEATURES cxx_std_11
--   )
-+    )
+    )
 +
-+    if (OPENVDB_USE_STATIC_LIBS)
-+      set_target_properties(OpenVDB::${COMPONENT} PROPERTIES 
-+        INTERFACE_COMPILE_DEFINITIONS "OPENVDB_STATICLIB;OPENVDB_OPENEXR_STATICLIB"
-+      )
-+    endif()
++   if (OPENVDB_USE_STATIC_LIBS)
++    set_target_properties(OpenVDB::${COMPONENT} PROPERTIES 
++      INTERFACE_COMPILE_DEFINITIONS "OPENVDB_STATICLIB;OPENVDB_OPENEXR_STATICLIB"
++    )
++   endif()
    endif()
  endforeach()
  
@@ -1771,5 +1767,5 @@ index df51830..0ab0c12 100644
          /// @todo This changes the compressor setting globally.
          if (blosc_set_compressor(compname) < 0) continue;
 -- 
-2.17.1
+2.16.2.windows.1
 
