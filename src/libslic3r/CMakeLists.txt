@@ -223,7 +223,6 @@ target_link_libraries(libslic3r
     semver
     TBB::tbb
     OpenVDB::openvdb
-    Blosc::blosc
     ${CMAKE_DL_LIBS}
     )
 
