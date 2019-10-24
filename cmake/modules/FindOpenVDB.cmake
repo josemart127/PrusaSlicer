@@ -349,9 +349,11 @@ endforeach()
 unset(_OPENVDB_PREREQUISITE_LIST)
 unset(_HAS_DEP)
 
+message(STATUS "Uses blosc: ${OpenVDB_USES_BLOSC}")
 if(OpenVDB_USES_BLOSC)
   find_package(Blosc )
-  if(NOT Blosc_FOUND OR NOT TARGET Blosc::blosc)
+  if(NOT Blosc_FOUND OR NOT TARGET Blosc::blosc) 
+    message(STATUS "find_package could not find Blosc. Fallback blosc search...")
     find_path(Blosc_INCLUDE_DIR blosc.h)
     find_library(Blosc_LIBRARY NAMES blosc)
     if (Blosc_INCLUDE_DIR AND Blosc_LIBRARY)
@@ -426,10 +428,18 @@ endif()
 set(_OPENVDB_HIDDEN_DEPENDENCIES)
 
 if(OpenVDB_USES_BLOSC)
-  list(APPEND _OPENVDB_HIDDEN_DEPENDENCIES Blosc::blosc)
+  if(OPENVDB_USE_STATIC_LIBS)
+    list(APPEND _OPENVDB_VISIBLE_DEPENDENCIES $<LINK_ONLY:Blosc::blosc>)
+  else()
+    list(APPEND _OPENVDB_HIDDEN_DEPENDENCIES Blosc::blosc)
+  endif()
 endif()
 
-list(APPEND _OPENVDB_HIDDEN_DEPENDENCIES ZLIB::ZLIB)
+if(OPENVDB_USE_STATIC_LIBS)
+  list(APPEND _OPENVDB_VISIBLE_DEPENDENCIES $<LINK_ONLY:ZLIB::ZLIB>)
+else()
+  list(APPEND _OPENVDB_HIDDEN_DEPENDENCIES ZLIB::ZLIB)
+endif()
 
 # ------------------------------------------------------------------------
 #  Configure imported target
