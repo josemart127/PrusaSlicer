@@ -268,7 +268,25 @@ endif()
 
 # Add standard dependencies
 
-find_package(IlmBase REQUIRED COMPONENTS Half)
+find_package(IlmBase COMPONENTS Half)
+if(NOT IlmBase_FOUND)
+  pkg_check_modules(IlmBase QUIET IlmBase)
+endif()
+if (IlmBase_FOUND AND NOT TARGET IlmBase::Half)
+  message(STATUS "Falling back to IlmBase found by pkg-config...")
+
+  find_library(IlmHalf_LIBRARY NAMES Half)
+  if(IlmHalf_LIBRARY-NOTFOUND)
+    message(FATAL_ERROR "IlmBase::Half can not be found!")
+  endif()
+  
+  add_library(IlmBase::Half UNKNOWN IMPORTED)
+  set_target_properties(IlmBase::Half PROPERTIES
+    IMPORTED_LOCATION "${IlmHalf_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES ${IlmBase_INCLUDE_DIRS})
+elseif(NOT IlmBase_FOUND)
+  message(FATAL_ERROR "IlmBase::Half can not be found!")
+endif()
 find_package(TBB REQUIRED COMPONENTS tbb)
 find_package(ZLIB REQUIRED)
 find_package(Boost REQUIRED COMPONENTS iostreams system)
@@ -284,6 +302,7 @@ set(_EXCLUDE_SYSTEM_PREREQUISITES 1)
 set(_RECURSE_PREREQUISITES 0)
 set(_OPENVDB_PREREQUISITE_LIST)
 
+if(NOT OPENVDB_USE_STATIC_LIBS)
 get_prerequisites(${OpenVDB_openvdb_LIBRARY}
   _OPENVDB_PREREQUISITE_LIST
   ${_EXCLUDE_SYSTEM_PREREQUISITES}
@@ -291,6 +310,7 @@ get_prerequisites(${OpenVDB_openvdb_LIBRARY}
   ""
   "${SYSTEM_LIBRARY_PATHS}"
 )
+endif()
 
 unset(_EXCLUDE_SYSTEM_PREREQUISITES)
 unset(_RECURSE_PREREQUISITES)
@@ -301,6 +321,7 @@ unset(_RECURSE_PREREQUISITES)
 
 set(OpenVDB_USES_BLOSC ${USE_BLOSC})
 set(OpenVDB_USES_LOG4CPLUS ${USE_LOG4CPLUS})
+set(OpenVDB_USES_ILM ${USE_EXR})
 set(OpenVDB_USES_EXR ${USE_EXR})
 
 # Search for optional dependencies
@@ -321,7 +342,7 @@ foreach(PREREQUISITE ${_OPENVDB_PREREQUISITE_LIST})
 
   string(FIND ${PREREQUISITE} "IlmImf" _HAS_DEP)
   if(NOT ${_HAS_DEP} EQUAL -1)
-    set(OpenVDB_USES_EXR ON)
+    set(OpenVDB_USES_ILM ON)
   endif()
 endforeach()
 
@@ -329,15 +350,19 @@ unset(_OPENVDB_PREREQUISITE_LIST)
 unset(_HAS_DEP)
 
 if(OpenVDB_USES_BLOSC)
-  find_package(Blosc REQUIRED)
-  if(NOT Blosc_FOUND)
-    pkg_check_modules(Blosc QUIET Blosc)
-  endif()
-  if (Blosc_FOUND AND NOT TARGET Blosc::Blosc)
-    add_library(Blosc::blosc UNKNOWN IMPORTED)
-    set_target_properties(Blosc::blosc PROPERTIES 
-      INTERFACE_LINK_LIBRARIES ${Blosc_LIBRARIES}
-      INTERFACE_INCLUDE_DIRECTORIES ${Blosc_INCLUDE_DIR})
+  find_package(Blosc )
+  if(NOT Blosc_FOUND OR NOT TARGET Blosc::blosc)
+    find_path(Blosc_INCLUDE_DIR blosc.h)
+    find_library(Blosc_LIBRARY NAMES blosc)
+    if (Blosc_INCLUDE_DIR AND Blosc_LIBRARY)
+      set(Blosc_FOUND TRUE)
+      add_library(Blosc::blosc UNKNOWN IMPORTED)
+      set_target_properties(Blosc::blosc PROPERTIES 
+        IMPORTED_LOCATION "${Blosc_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES ${Blosc_INCLUDE_DIR})
+    elseif()
+      message(FATAL_ERROR "Blosc library can not be found!")
+    endif()
   endif()
 endif()
 
@@ -345,8 +370,11 @@ if(OpenVDB_USES_LOG4CPLUS)
   find_package(Log4cplus REQUIRED)
 endif()
 
-if(OpenVDB_USES_EXR)
+if(OpenVDB_USES_ILM)
   find_package(IlmBase REQUIRED)
+endif()
+
+if(OpenVDB_USES_EXR)
   find_package(OpenEXR REQUIRED)
 endif()
 

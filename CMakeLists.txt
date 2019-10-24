@@ -398,6 +398,7 @@ if(SLIC3R_STATIC)
     set(OPENVDB_USE_STATIC_LIBS ON)
 endif()
 
+set(USE_BLOSC TRUE)
 find_package(OpenVDB 5.0 REQUIRED openvdb)
 slic3r_remap_configs(IlmBase::Half RelWithDebInfo Release)
 

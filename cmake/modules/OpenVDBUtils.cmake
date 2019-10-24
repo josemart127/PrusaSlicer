@@ -148,11 +148,15 @@ function(OPENVDB_ABI_VERSION_FROM_PRINT OPENVDB_PRINT)
   endif()
 
   if(${_VDB_PRINT_RETURN_STATUS})
+    message(WARNING "vdb_print returned with status ${_VDB_PRINT_RETURN_STATUS}")
     return()
   endif()
 
   set(_OpenVDB_ABI)
   string(REGEX REPLACE ".*abi([0-9]*).*" "\\1" _OpenVDB_ABI ${_VDB_PRINT_VERSION_STRING})
+  if(${_OpenVDB_ABI} STREQUAL ${_VDB_PRINT_VERSION_STRING})
+    set(_OpenVDB_ABI "")
+  endif()
   unset(_VDB_PRINT_RETURN_STATUS)
   unset(_VDB_PRINT_VERSION_STRING)
 
