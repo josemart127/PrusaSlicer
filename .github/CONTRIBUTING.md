@@ -19,3 +19,4 @@ Please make sure only to include one issue per report. If you encounter multiple
 
 Simon Tatham has written an excellent on article on [How to Report Bugs Effectively](http://www.chiark.greenend.org.uk/~sgtatham/bugs.html) which is well worth reading, although it is not specific to Slic3r.
 
+Is it possible to be able to visualize the contents of the gcode as in Simplify3D?
